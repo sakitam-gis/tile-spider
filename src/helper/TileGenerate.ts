@@ -8,8 +8,10 @@ class TileLayer extends Base {
   origin: Array<number>;
   size: Array<number>;
   center: Array<number>;
+  zoom: number;
   resolution: number;
   extent: Array<number>;
+  resolutions: Array<number>;
   constructor (options = {}) {
     super(options);
 
@@ -31,9 +33,16 @@ class TileLayer extends Base {
      */
     this.tiles = [];
 
-    this.resolution = options['resolution'] || 0;
+    /**
+     * resolutions
+     */
+    this.resolutions = options['resolutions'] || this.projection.getResolutions();
 
-    this.extent = options['extent'] || [];
+    this.resolution = options['resolution'] || this.resolutions[0];
+
+    this.zoom = this.getNearestZoom(false);
+
+    this.extent = options['extent'] || this.projection.getExtent();
 
     this.center = [(this.extent[2] - this.extent[0]) / 2, (this.extent[3] - this.extent[1]) / 2];
 
@@ -73,7 +82,7 @@ class TileLayer extends Base {
         this.origin[1] - tile.y * this.tileSize[1] * tileResolution
       ];
     }
-    const centerTile = this._getTileIndex(center[0], center[1], zoom);
+    const centerTile = this._getTileIndex(center[0], center[1], this.zoom);
     this._sortTiles(tiles, centerTile);
   }
 
@@ -93,8 +102,8 @@ class TileLayer extends Base {
     let x = this.origin[0] + parseInt(tile['x']) * this.tileSize[0] * layerResolution;
     let y = this.origin[1] - parseInt(tile['y']) * this.tileSize[1] * layerResolution;
     let [width, height] = [
-      Math.ceil(this.tileSize[0] * layerResolution / resolution),
-      Math.ceil(this.tileSize[1] * layerResolution / resolution)
+      Math.ceil(this.tileSize[0]),
+      Math.ceil(this.tileSize[1])
     ];
     let [idxMax, idxMin] = [0, 0];
     const mapWidth = mapExtent[2] - mapExtent[0];
@@ -153,12 +162,11 @@ class TileLayer extends Base {
    * @private
    */
   _getTilesInternal () {
-    const map = this.getMap();
-    const size = map.getSize();
-    const center = map.getCenter();
-    const mapResolution = map.getResolution();
-    const resolutions = map.getResolutions();
-    const zoom = map._getNearestZoom(false);
+    const size = this.size;
+    const center = this.center;
+    const mapResolution = this.resolution;
+    const resolutions = this.resolutions;
+    const zoom = this.zoom;
     const layerResolution = resolutions[zoom];
     const scale = layerResolution / mapResolution;
     const scaledTileSize = [this.tileSize[0] * scale, this.tileSize[1] * scale];
@@ -203,8 +211,7 @@ class TileLayer extends Base {
    * @private
    */
   _getTileExtent (idxX, idxY, zoom) {
-    const map = this.getMap();
-    const resolutions = map.getResolutions();
+    const resolutions = this.resolutions;
     const resolution = Number(resolutions[zoom]);
     if (!resolution) {
       return [];
@@ -225,8 +232,7 @@ class TileLayer extends Base {
    * @private
    */
   _getTileIndex (x, y, zoom) {
-    const map = this.getMap();
-    const resolutions = map.getResolutions();
+    const resolutions = this.resolutions;
     const resolution = Number(resolutions[zoom]);
     if (!resolution) {
       return [-1, -1];
@@ -253,36 +259,26 @@ class TileLayer extends Base {
   }
 
   /**
-   * get coordinates from pixel
-   * @param pixel
-   * @returns {*[]}
+   * get current nearest zoom
+   * @param greater
+   * @returns {number}
    */
-  getCoordinateFromPixel (pixel) {
-    const size = this.getSize();
-    const center = this.getCenter();
-    const _resolution = this.getResolution();
-    const halfSize = [size[0] / 2, size[1] / 2];
-    return [
-      (pixel[0] - halfSize[0]) * _resolution + center[0],
-      (halfSize[1] - pixel[1]) * _resolution + center[1]
-    ];
-  }
-
-  /**
-   * get pixel from coordinates
-   * @param coordinates
-   * @returns {*[]}
-   */
-  getPixelFromCoordinate (coordinates) {
-    const size = this.getSize();
-    const halfSize = [size[0] / 2, size[1] / 2];
-    const center = this.getCenter();
-    const resolution = this.getResolution();
-    return [
-      halfSize[0] + (coordinates[0] - center[0]) / resolution,
-      halfSize[1] - (coordinates[1] - center[1]) / resolution
-    ];
+  getNearestZoom (greater) {
+    const resolution = this.resolution;
+    const resolutions = this.resolutions;
+    let [newResolution, lastZoom] = [undefined, 0];
+    for (let i = 0, length = resolutions.length; i < length; i++) {
+      newResolution = resolutions[i];
+      if (resolution > newResolution) {
+        return greater ? i : lastZoom;
+      } else if (resolution <= newResolution && resolution > newResolution) {
+        return i;
+      } else {
+        lastZoom = i;
+      }
+    }
+    return 0;
   }
 }
 
-export default TileLayer
+export default TileLayer;

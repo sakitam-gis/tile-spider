@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as maptalks from 'maptalks';
 // with node-canvas 2.0
 import * as Canvas from 'canvas';
-import { resolve } from '../helper/common';
+import { resolve } from '../helper';
 
 // load node adapters, source: https://github.com/maptalks/maptalks.node
 import 'maptalks.node';
@@ -43,8 +43,8 @@ const GetMap: any = async (ctx, next) => {
       };
     });
   });
-
   map.addLayer(layer);
+  next();
 };
 
 export default GetMap;

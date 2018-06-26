@@ -34,7 +34,7 @@ const isFunction = value => {
  * @returns {boolean}
  */
 const isNull = (obj) => {
-  return obj == null;
+  return obj == undefined;
 };
 
 /**

@@ -1,9 +1,11 @@
 import { isNumber } from '../index';
+import Projection from '../Proj/Projection';
+import EPSG3857 from '../Proj/epsg3857';
 class Base {
   extent: Array<number>;
   crossOrigin: any;
-  projection: any;
   origin: Array<number>;
+  projection: Projection;
   constructor (options = {}) {
     /**
      * current layer opacity
@@ -23,6 +25,11 @@ class Base {
     this.extent = options['extent'] || this.projection.getExtent();
 
     /**
+     * layer projection
+     */
+    this.projection = new EPSG3857(options['projection'] || 'EPSG:3857');
+
+    /**
      * tile origin
      * @type {*}
      */
@@ -35,7 +42,7 @@ class Base {
    */
   getExtent () {
     return this.extent;
-  };
+  }
 
   /**
    * Set the extent at which the layer is visible.  If `undefined`, the layer
@@ -45,7 +52,7 @@ class Base {
   setExtent (extent) {
     this.extent = extent;
     // this.load();
-  };
+  }
 
   /**
    * load layer
@@ -53,4 +60,4 @@ class Base {
   load () {}
 }
 
-export default Base
+export default Base;
