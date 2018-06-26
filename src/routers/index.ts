@@ -1,6 +1,6 @@
 import * as Router from 'koa-router';
 import GetMap from '../models';
-import Login from '../models/login';
+import { login, qrcode, islogin, getlogin } from '../models/login';
 
 const router: any = new Router();
 
@@ -16,6 +16,12 @@ router.get('/', async (ctx, next) => {
 
 router.get('/map', GetMap);
 
-router.get('/login', Login);
+router.get('/api/jslogin', login);
+
+router.get('/api/qrcode', qrcode);
+
+router.get('/api/islogin', islogin);
+
+router.get('/api/getlogin', getlogin);
 
 export default router;
