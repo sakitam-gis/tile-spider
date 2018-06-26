@@ -26,6 +26,8 @@
     "typescript": "^2.9.2"
   },
   "dependencies": {
+    "axios": "^0.18.0",
+    "canvas": "^1.6.11",
     "koa": "^2.5.1",
     "koa-bodyparser": "^4.2.1",
     "koa-convert": "^1.2.0",
@@ -34,6 +36,8 @@
     "koa-logger": "^3.2.0",
     "koa-onerror": "^4.0.0",
     "koa-router": "^7.4.0",
+    "maptalks": "^0.40.4",
+    "maptalks.node": "^0.1.1",
     "restc": "^0.3.2"
   },
   "author": "sakitam-fdd <smilefdd@gmail.com>",

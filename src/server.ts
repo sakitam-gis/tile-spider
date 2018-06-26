@@ -6,6 +6,7 @@ import * as cors from 'koa-cors';
 import * as onerror from 'koa-onerror';
 import * as convert from 'koa-convert';
 import * as restc from 'restc';
+import router from './routers';
 
 const app: any = new Koa();
 // error handler
@@ -30,6 +31,7 @@ app.use(async (ctx, next) => {
 });
 
 // routes
+app.use(router.routes()).use(router.allowedMethods());
 
 // error-handling
 app.on('error', (err, ctx) => {
