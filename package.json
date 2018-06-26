@@ -4,13 +4,13 @@
   "description": "tile spider",
   "main": "dist/server.js",
   "scripts": {
-    "dev": "nodemon --watch src --exec npm run debug",
+    "dev": "nodemon --watch dist --exec npm run debug",
     "debug": "cross-env NODE_ENV=development node --inspect dist/server.js",
     "prebuild": "npm run clean",
     "build": "npm run lint && tsc",
     "prod": "cross-env NODE_ENV=production node dist/server.js",
     "lint": "tslint -c tslint.json -p tsconfig.json",
-    "clean": "rm -rf dist @types"
+    "clean": "rimraf -rf dist @types"
   },
   "devDependencies": {
     "@types/koa": "^2.0.46",
