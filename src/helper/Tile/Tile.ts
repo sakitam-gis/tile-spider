@@ -37,7 +37,6 @@ class Tile {
         url: this.url,
         responseType: 'arraybuffer'
       }).then((response) => {
-        checkFolderExist(resolve(`../images/${this.z}`), true);
         checkFolderExist(resolve(`../images/${this.z}/${this.x}`), true);
         const img = new Image();
         img.src = response.data;

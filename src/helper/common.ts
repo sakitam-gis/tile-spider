@@ -62,20 +62,25 @@ const checkFileExists = (path) => {
 };
 
 /**
- * 判断文件夹是否存在
- * @param path
+ * check folder exist
+ * @param path_
  * @param mkdir
  * @returns {boolean}
  */
-const checkFolderExist = (path, mkdir) => {
-  if (!fs.existsSync(path)) {
-    if (mkdir) {
-      fs.mkdirSync(path);
+const checkFolderExist = (path_, mkdir) => {
+  const paths = path.normalize(path_).split(path.sep);
+  let currentPath = paths[0];
+  let result = true;
+  for (let i = 1; i < paths.length; i++) {
+    currentPath += path.sep + paths[i];
+    if (!fs.existsSync(currentPath)) {
+      if (mkdir) {
+        fs.mkdirSync(currentPath);
+      }
+      result = false;
     }
-    return false;
-  } else {
-    return true;
   }
+  return result;
 };
 
 export {
