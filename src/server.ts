@@ -5,13 +5,19 @@ import * as logger from 'koa-logger';
 import * as cors from 'koa-cors';
 import * as onerror from 'koa-onerror';
 import * as convert from 'koa-convert';
+import * as staticServer from 'koa-static';
 import * as restc from 'restc';
+import * as Canvas from 'canvas';
 import router from './routers';
+import { resolve } from './helper';
+// register node-canvas's Image as a global class
+global['Image'] = Canvas.Image;
 
 const app: any = new Koa();
 // error handler
 onerror(app);
 app.use(convert(cors()));
+app.use(staticServer(resolve('images')));
 
 // middlewares
 app.use(bodyParser({

@@ -1,16 +1,20 @@
+import * as fs from 'fs';
+import Tile from './Tile/Tile';
 import Base from './Tile/Base';
-import { isFunction } from './index';
+import * as Canvas from 'canvas';
+import { isFunction, resolve, loadImage } from './index';
 
 class TileLayer extends Base {
   url: any;
   tileSize: Array<number>;
-  tiles: Array<number>;
-  origin: Array<number>;
+  tiles: Array<any>;
   size: Array<number>;
   center: Array<number>;
   zoom: number;
+  canvas: Canvas;
+  context: any;
+  callback: Function;
   resolution: number;
-  extent: Array<number>;
   resolutions: Array<number>;
   constructor (options = {}) {
     super(options);
@@ -42,20 +46,31 @@ class TileLayer extends Base {
 
     this.zoom = this.getNearestZoom(false);
 
-    this.extent = options['extent'] || this.projection.getExtent();
-
     this.center = [(this.extent[2] - this.extent[0]) / 2, (this.extent[3] - this.extent[1]) / 2];
 
     this.size = [(this.extent[2] - this.extent[0]) / this.resolution, (this.extent[3] - this.extent[1]) / this.resolution];
+
+    this.canvas = new Canvas(this.size[0] || 500, this.size[1] || 500);
+
+    this.context = this.canvas.getContext(options['context'] || '2d');
+
+    this.callback = options['callback'] || function () {};
   }
 
   /**
-   * load layer
-   * @returns {TileLayer}
+   * get pixel from coordinates
+   * @param coordinates
+   * @returns {*[]}
    */
-  load () {
-    this.render();
-    return this;
+  getPixelFromCoordinate (coordinates) {
+    const size = this.size;
+    const halfSize = [size[0] / 2, size[1] / 2];
+    const center = this.center;
+    const resolution = this.resolution;
+    return [
+      halfSize[0] + (coordinates[0] - center[0]) / resolution,
+      halfSize[1] - (coordinates[1] - center[1]) / resolution
+    ];
   }
 
   /**
@@ -65,7 +80,7 @@ class TileLayer extends Base {
     const size = this.size;
     const center = this.center;
     const layerResolution = this.resolution;
-    let tiles = this._getTilesInternal();
+    const tiles = this._getTilesInternal();
     this.setExtent([
       center[0] - size[0] * layerResolution / 2,
       center[1] - size[1] * layerResolution / 2,
@@ -84,37 +99,32 @@ class TileLayer extends Base {
     }
     const centerTile = this._getTileIndex(center[0], center[1], this.zoom);
     this._sortTiles(tiles, centerTile);
+    return this._getTiles(tiles);
   }
 
   /**
    * draw tile
    * @param tile
-   * @param context
    * @private
    */
-  _drawTile (tile, context) {
-    if (!tile.isLoaded()) {
-      return;
-    }
-    const size = this.size;
-    const center = this.center;
-    const layerResolution = this.resolution;
-    let x = this.origin[0] + parseInt(tile['x']) * this.tileSize[0] * layerResolution;
-    let y = this.origin[1] - parseInt(tile['y']) * this.tileSize[1] * layerResolution;
-    let [width, height] = [
-      Math.ceil(this.tileSize[0]),
-      Math.ceil(this.tileSize[1])
-    ];
-    let [idxMax, idxMin] = [0, 0];
-    const mapWidth = mapExtent[2] - mapExtent[0];
-    for (let i = idxMin; i <= idxMax; i++) {
-      let pixel = map.getPixelFromCoordinate([x + i * mapWidth, y]);
-      let [pixelX, pixelY] = [pixel[0], pixel[1]];
-      try {
-        context.drawImage(tile.getImage(), Math.round(pixelX), Math.round(pixelY), width, height);
-      } catch (e) {
+  _drawTile (tile) {
+    return new Promise((resolve1, reject) => {
+      const resolution = this.resolution;
+      const x = this.origin[0] + parseInt(tile['x']) * this.tileSize[0] * resolution;
+      const y = this.origin[1] - parseInt(tile['y']) * this.tileSize[1] * resolution;
+      const [width, height] = [this.tileSize[0], this.tileSize[1]];
+      const [idxMax, idxMin] = [0, 0];
+      const mapWidth = this.size[0];
+      for (let i = idxMin; i <= idxMax; i++) {
+        const pixel = this.getPixelFromCoordinate([x + i * mapWidth, y]);
+        const [pixelX, pixelY] = [pixel[0], pixel[1]];
+        try {
+          this.context.drawImage(tile.getImage(), Math.round(pixelX), Math.round(pixelY), width, height);
+          resolve1(true);
+        } catch (e) {
+        }
       }
-    }
+    });
   }
 
   /**
@@ -123,22 +133,21 @@ class TileLayer extends Base {
    * @returns {Array}
    * @private
    */
-  _getTiles (tiles) {
+  async _getTiles (tiles) {
+    this.context.save();
+    this.context.globalAlpha = this.getOpacity();
     for (let i = 0; i < tiles.length; i++) {
       const tile = tiles[i];
-      const existTiles = this.tiles.filter(_tile => _tile.id === tile['id']);
-      if (tile['id'] && existTiles.length > 0 && existTiles[0].url === existTiles[0].getErrorTile()) {
-        existTiles[0].setOptions({
-          x: tile.x,
-          y: tile.y,
-          z: tile.z,
-          id: tile.id,
-          url: tile.url
-        });
-      } else {
-        this.tiles.push(new Tile(tile.url, tile.x, tile.y, tile.z, tile.id, this));
+      const canvasTile = new Tile(tile.url, tile.x, tile.y, tile.z, tile.id);
+      const _image = await canvasTile._loadTile();
+      canvasTile.setImage(_image);
+      const flag = await this._drawTile(canvasTile);
+      if (flag) {
+        this.tiles.push(canvasTile);
       }
     }
+    this.context.restore();
+    this.canvas.createPNGStream().pipe(fs.createWriteStream(resolve(`../images/${this.zoom}.png`)));
     return this.tiles;
   }
 
@@ -150,8 +159,8 @@ class TileLayer extends Base {
    */
   _sortTiles (tiles, centerTile) {
     tiles.sort((a, b) => {
-      let indexX = Math.pow((a[0] - centerTile[0]), 2) + Math.pow((a[1] - centerTile[1]), 2);
-      let indexY = Math.pow((b[0] - centerTile[0]), 2) + Math.pow((b[1] - centerTile[1]), 2);
+      const indexX = Math.pow((a[0] - centerTile[0]), 2) + Math.pow((a[1] - centerTile[1]), 2);
+      const indexY = Math.pow((b[0] - centerTile[0]), 2) + Math.pow((b[1] - centerTile[1]), 2);
       return Math.abs(indexX - indexY);
     });
   }
@@ -173,10 +182,10 @@ class TileLayer extends Base {
     const width = Math.abs(size[0] * Math.cos(0)) + Math.abs(size[1] * Math.sin(0));
     const height = Math.abs(size[0] * Math.sin(0)) + Math.abs(size[1] * Math.cos(0));
     const centerTile = this._getTileIndex(center[0], center[1], zoom);
-    let tileLeft = centerTile[0] - Math.ceil(width / scaledTileSize[0] / 2);
-    let tileRight = centerTile[0] + Math.ceil(width / scaledTileSize[0] / 2);
-    let tileBottom = centerTile[1] - Math.ceil(height / scaledTileSize[1] / 2);
-    let tileTop = centerTile[1] + Math.ceil(height / scaledTileSize[1] / 2);
+    const tileLeft = centerTile[0] - Math.ceil(width / scaledTileSize[0] / 2);
+    const tileRight = centerTile[0] + Math.ceil(width / scaledTileSize[0] / 2);
+    const tileBottom = centerTile[1] - Math.ceil(height / scaledTileSize[1] / 2);
+    const tileTop = centerTile[1] + Math.ceil(height / scaledTileSize[1] / 2);
     const _tiles = [];
     for (let i = tileLeft; i <= tileRight; i++) {
       for (let j = tileBottom; j <= tileTop; j++) {

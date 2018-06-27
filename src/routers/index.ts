@@ -1,6 +1,7 @@
 import * as Router from 'koa-router';
 import GetMap from '../models';
 import { login, qrcode, islogin, getlogin } from '../models/login';
+import { getTile } from '../models/tile';
 
 const router: any = new Router();
 
@@ -15,6 +16,8 @@ router.get('/', async (ctx, next) => {
 });
 
 router.get('/map', GetMap);
+
+router.get('/map/getTile', getTile);
 
 router.get('/api/jslogin', login);
 

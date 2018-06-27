@@ -26,7 +26,7 @@ class Projection {
      * @private
      * @type {Array}
      */
-    this.extent_ = options.extent !== undefined ? options.extent : null;
+    this.extent_ = options.extent !== undefined ? options.extent : undefined;
 
     /**
      * @private
@@ -49,7 +49,7 @@ class Projection {
      * @private
      * @type {*}
      */
-    this.defaultTileGrid_ = null;
+    this.defaultTileGrid_ = undefined;
 
     /**
      * @private
@@ -79,7 +79,7 @@ class Projection {
   }
 
   setResolutions (resolutions) {
-    this.resolutions_ = resolutions
+    this.resolutions_ = resolutions;
   }
 
   getAxisOrientation () {

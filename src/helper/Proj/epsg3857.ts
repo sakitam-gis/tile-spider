@@ -26,7 +26,7 @@ class EPSG3857 extends Projection {
       getPointResolution: function (resolution, point) {
         return resolution / Math.cosh(point[1] / RADIUS);
       }
-    })
+    });
   }
 
   project (input, output, dimension) {

@@ -1,25 +1,21 @@
-import axios from 'axios';
+import TileLayer from '../helper/TileGenerate';
 
-const login: any = async (ctx, next) => {
+const getTile: any = async (ctx, next) => {
   try {
-    const { appid, fun, lang } = ctx.query;
-    const data = await axios.get('https://login.weixin.qq.com/jslogin', {
-      params: {
-        appid: appid,
-        fun: fun,
-        lang: lang,
-        _: new Date().getTime()
-      }
+    const { url, resolution } = ctx.query;
+    const layer = new TileLayer({
+      url: url,
+      projection: 'EPSG:3857',
+      resolution: Number(resolution)
     });
-    if (data.data) {
-      ctx.status = 200;
-      ctx.body = {
-        code: 200,
-        success: true,
-        message: 'success',
-        data: data.data
-      };
-    }
+    const res = await layer.render();
+    ctx.status = 200;
+    ctx.body = {
+      code: 200,
+      success: true,
+      message: 'error tiles',
+      data: res.filter(item => !item['isLoad'])
+    };
     next();
   } catch (error) {
     ctx.status = 500;
@@ -33,5 +29,5 @@ const login: any = async (ctx, next) => {
 };
 
 export {
-  login
+  getTile
 };

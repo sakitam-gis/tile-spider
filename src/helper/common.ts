@@ -1,3 +1,4 @@
+import * as fs from 'fs';
 import * as path from 'path';
 
 /**
@@ -46,10 +47,43 @@ const isNumber = (val) => {
   return (typeof val === 'number') && !isNaN(val);
 };
 
+/**
+ * 检查数据源文件是否存在
+ * @param path
+ * @returns {boolean}
+ */
+const checkFileExists = (path) => {
+  try {
+    fs.statSync(path);
+    return fs.existsSync(path);
+  } catch (e) {
+    return false;
+  }
+};
+
+/**
+ * 判断文件夹是否存在
+ * @param path
+ * @param mkdir
+ * @returns {boolean}
+ */
+const checkFolderExist = (path, mkdir) => {
+  if (!fs.existsSync(path)) {
+    if (mkdir) {
+      fs.mkdirSync(path);
+    }
+    return false;
+  } else {
+    return true;
+  }
+};
+
 export {
   isNull,
   isNumber,
   resolve,
   isObject,
-  isFunction
+  isFunction,
+  checkFileExists,
+  checkFolderExist
 };

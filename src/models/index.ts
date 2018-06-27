@@ -6,8 +6,6 @@ import { resolve } from '../helper';
 
 // load node adapters, source: https://github.com/maptalks/maptalks.node
 import 'maptalks.node';
-// register node-canvas's Image as a global class
-global['Image'] = Canvas.Image;
 
 const GetMap: any = async (ctx, next) => {
   const { width, height, zoom, projection, url } = ctx.query;
