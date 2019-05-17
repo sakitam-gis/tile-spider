@@ -1,5 +1,7 @@
 # tile-spider
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/sakitam-gis/tile-spider.svg)](https://greenkeeper.io/)
+
 > map tile download base on koa and node-canvas
 
 ## USE
