@@ -20,17 +20,17 @@
     "@types/koa-router": "^7.0.30",
     "@types/koa-static": "^4.0.0",
     "cross-env": "^5.2.0",
-    "debug": "^2.6.3",
+    "debug": "^4.1.1",
     "koa-static": "^5.0.0",
     "nodemon": "^1.17.5",
     "rimraf": "^2.6.2",
-    "ts-node": "^7.0.0",
+    "ts-node": "^8.1.0",
     "tslint": "^5.10.0",
-    "typescript": "^2.9.2"
+    "typescript": "^3.4.5"
   },
   "dependencies": {
     "axios": "^0.18.0",
-    "canvas": "^1.6.11",
+    "canvas": "^2.5.0",
     "koa": "^2.5.1",
     "koa-bodyparser": "^4.2.1",
     "koa-convert": "^1.2.0",
@@ -39,9 +39,9 @@
     "koa-logger": "^3.2.0",
     "koa-onerror": "^4.0.0",
     "koa-router": "^7.4.0",
-    "maptalks": "^0.40.4",
-    "maptalks.node": "^0.1.1",
-    "restc": "^0.3.2"
+    "maptalks": "^0.44.0",
+    "maptalks.node": "^0.2.0",
+    "restc": "^0.4.0"
   },
   "author": "sakitam-fdd <smilefdd@gmail.com>",
   "license": "MIT"
